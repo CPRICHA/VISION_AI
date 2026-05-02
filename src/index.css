@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Clinical Eye Analysis dark palette */
+    --bg-primary: 228 57% 9%; /* #0A0F24 */
+    --bg-secondary: 220 59% 14%; /* #0F1D3A */
+    --card-bg: 218 48% 12%; /* #101B2E */
+    --border-color: 217 44% 20%; /* #1C2D48 */
+    --accent-primary: 206 100% 58%; /* #29A3FF */
+    --accent-secondary: 201 100% 66%; /* #52C3FF */
+    --text-primary: 225 53% 94%; /* #E8ECF8 */
+    --text-muted: 229 34% 37%; /* #3E4A7F */
+
+    /* Map design tokens to palette (HSL triplets) */
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+
+    --card: var(--card-bg);
+    --card-foreground: var(--text-primary);
+
+    --popover: var(--card-bg);
+    --popover-foreground: var(--text-primary);
+
+    --primary: var(--accent-primary);
+    --primary-foreground: var(--bg-primary);
+
+    --secondary: var(--bg-secondary);
+    --secondary-foreground: var(--text-primary);
+
+    --muted: var(--bg-secondary);
+    --muted-foreground: var(--text-muted);
+
+    --accent: var(--accent-secondary);
+    --accent-foreground: var(--bg-primary);
+
+    /* No separate destructive color in this strict palette; reuse accent */
+    --destructive: var(--accent-primary);
+    --destructive-foreground: var(--bg-primary);
+
+    --border: var(--border-color);
+    --input: var(--border-color);
+    --ring: var(--accent-primary);
+
+    --radius: 1rem;
+
+    /* Custom Vision AI semantic colors mapped to palette */
+    --medical-navy: var(--bg-secondary);
+    --lavender-light: var(--bg-secondary);
+    --glass-bg: var(--card-bg);
+    --gradient-start: var(--accent-primary);
+    --gradient-end: var(--accent-secondary);
+
+    --sidebar-background: var(--bg-secondary);
+    --sidebar-foreground: var(--text-primary);
+    --sidebar-primary: var(--accent-primary);
+    --sidebar-primary-foreground: var(--bg-primary);
+    --sidebar-accent: var(--accent-secondary);
+    --sidebar-accent-foreground: var(--bg-primary);
+    --sidebar-border: var(--border-color);
+    --sidebar-ring: var(--accent-primary);
+
+    /* Shadows & Effects derived from palette */
+    --shadow-soft: 0 8px 24px hsl(var(--bg-secondary) / 0.6);
+    --shadow-card: 0 4px 16px hsl(var(--bg-secondary) / 0.8);
+  }
+
+  .dark {
+    /* Dark mode uses the same clinical palette */
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+
+    --card: var(--card-bg);
+    --card-foreground: var(--text-primary);
+
+    --popover: var(--card-bg);
+    --popover-foreground: var(--text-primary);
+
+    --primary: var(--accent-primary);
+    --primary-foreground: var(--bg-primary);
+
+    --secondary: var(--bg-secondary);
+    --secondary-foreground: var(--text-primary);
+
+    --muted: var(--bg-secondary);
+    --muted-foreground: var(--text-muted);
+
+    --accent: var(--accent-secondary);
+    --accent-foreground: var(--bg-primary);
+
+    --destructive: var(--accent-primary);
+    --destructive-foreground: var(--bg-primary);
+
+    --border: var(--border-color);
+    --input: var(--border-color);
+    --ring: var(--accent-primary);
+
+    --sidebar-background: var(--bg-primary);
+    --sidebar-foreground: var(--text-primary);
+    --sidebar-primary: var(--accent-primary);
+    --sidebar-primary-foreground: var(--bg-primary);
+    --sidebar-accent: var(--accent-secondary);
+    --sidebar-accent-foreground: var(--bg-primary);
+    --sidebar-border: var(--border-color);
+    --sidebar-ring: var(--accent-primary);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* Gradient style for main headings only */
+  .heading-gradient {
+    background-image: linear-gradient(to right, hsl(var(--bg-secondary)), hsl(var(--accent-primary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@layer components {
+  /* Full-screen background for login page using clinical dark gradient */
+  .login-page {
+    @apply min-h-screen flex items-center justify-center px-4;
+    background:
+      radial-gradient(circle at 0 0, hsl(var(--accent-secondary) / 0.18), transparent 55%),
+      radial-gradient(circle at 100% 0, hsl(var(--accent-primary) / 0.35), transparent 55%),
+      radial-gradient(circle at 0 100%, hsl(var(--accent-secondary) / 0.18), transparent 55%),
+      hsl(var(--bg-primary));
+  }
+
+  /* Outer rounded container similar to the WiFi portal card */
+  .login-shell {
+    @apply relative w-full max-w-5xl overflow-hidden shadow-2xl;
+    border-radius: 2.5rem;
+    background: linear-gradient(135deg, hsl(var(--bg-secondary)), hsl(var(--bg-secondary)));
+  }
+
+  .login-inner {
+    @apply relative grid md:grid-cols-2;
+  }
+
+  /* Left side flowy white shape */
+  .login-blob-wrapper {
+    @apply relative flex items-center justify-center p-6 sm:p-10 bg-transparent;
+  }
+
+  .login-blob {
+    @apply relative w-full h-full;
+    border-radius: 48% 52% 54% 46% / 64% 52% 48% 36%;
+    box-shadow: 0 40px 80px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+    background-image: url("/istockphoto-1303677934-612x612.jpg");
+    background-size: cover;
+    background-position: center;
+  }
+
+  .login-blob-inner {
+    @apply relative h-full w-full;
+  }
+
+  /* Decorative soft circles around the main card */
+  .login-bubbles::before,
+  .login-bubbles::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    background: radial-gradient(circle, hsl(var(--accent-secondary) / 0.35), transparent 60%);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .login-bubbles::before {
+    width: 160px;
+    height: 160px;
+    top: 6%;
+    right: 10%;
+  }
+
+  .login-bubbles::after {
+    width: 220px;
+    height: 220px;
+    bottom: -8%;
+    left: -6%;
+  }
+
+  @media (max-width: 767px) {
+    .login-shell {
+      border-radius: 1.75rem;
+    }
+
+    .login-blob-wrapper {
+      padding: 1.75rem;
+    }
+
+    .login-blob {
+      border-radius: 50% 50% 60% 40% / 60% 45% 55% 40%;
+    }
+  }
+}

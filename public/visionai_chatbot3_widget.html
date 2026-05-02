@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VisionAI Eye Care Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .message-text {
+        white-space: pre-line;
+      }
+
+      /* Chatbot container fills entire iframe */
+      #chatbotContainer {
+        position: absolute;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+      }
+
+      /* Chat Widget fills container (iframe box) */
+      #chatWidget {
+        width: 100%;
+        height: 100%;
+        background: #0d182a;
+        border-radius: 0;
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid #2d3748;
+      }
+
+      /* Custom colors */
+      .bg-custom-dark {
+        background-color: #0d182a;
+      }
+      .bg-custom-chat {
+        background-color: #0f1d38;
+      }
+      .bg-user-message {
+        background-color: #279df7;
+      }
+      .bg-chatbot-message {
+        background-color: #0f1d38;
+      }
+      .text-custom-light {
+        color: #e2e8f0;
+      }
+      .border-custom-light {
+        border-color: #2d3748;
+      }
+      .bg-custom-input {
+        background-color: #1a202c;
+      }
+
+      /* Custom scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #1a202c;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #4a5568;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #718096;
+      }
+
+      /* Horizontal scroll for quick actions */
+      .horizontal-scroll {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #4a5568 #1a202c;
+        padding-bottom: 4px;
+        gap: 4px;
+      }
+      .horizontal-scroll::-webkit-scrollbar {
+        height: 4px;
+      }
+      .horizontal-scroll::-webkit-scrollbar-track {
+        background: #1a202c;
+        border-radius: 10px;
+      }
+      .horizontal-scroll::-webkit-scrollbar-thumb {
+        background: #4a5568;
+        border-radius: 10px;
+      }
+      .horizontal-scroll::-webkit-scrollbar-thumb:hover {
+        background: #718096;
+      }
+
+      /* Message styles */
+      .chatbot-message {
+        background: #0f1d38;
+        border: 1px solid #2d3748;
+        border-radius: 12px;
+        border-bottom-left-radius: 4px;
+        padding: 10px 12px;
+        max-width: 280px;
+        color: #e2e8f0;
+        font-size: 0.875rem;
+        line-height: 1.4;
+      }
+
+      .user-message {
+        background: #279df7;
+        border-radius: 12px;
+        border-bottom-right-radius: 4px;
+        padding: 10px 12px;
+        max-width: 280px;
+        color: white;
+        font-size: 0.875rem;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Chatbot Container -->
+    <div id="chatbotContainer">
+      <!-- Chat Widget -->
+      <div id="chatWidget">
+        <!-- Chat Header -->
+        <div class="bg-custom-dark text-white p-3 border-b border-gray-700">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center">
+              <div
+                class="w-8 h-8 bg-user-message rounded-full flex items-center justify-center mr-2"
+              >
+                <i class="fas fa-robot text-white text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold">VisionAI Assistant</h2>
+                <p class="text-gray-300 text-xs">
+                  Online • Eye care specialist
+                </p>
+              </div>
+            </div>
+            <button
+              onclick="minimizeChat()"
+              class="text-gray-400 hover:text-white transition-colors"
+            >
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div
+          id="messages"
+          class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-custom-dark"
+        >
+          <!-- Initial Welcome Message -->
+          <div class="flex justify-start fade-in">
+            <div class="chatbot-message">
+              <div class="message-text">
+                <strong>Hello! 👋</strong><br />
+                I'm your VisionAI Eye Care Assistant! How can I help with your
+                eye health today?
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t border-gray-700 bg-custom-input p-3">
+          <!-- Symptom Analysis Section (Initially Hidden) -->
+          <div
+            id="symptomAnalysisSection"
+            class="hidden mb-3 bg-custom-chat p-3 rounded-lg border border-gray-700"
+            onclick="event.stopPropagation()"
+          >
+            <div class="flex justify-between items-center mb-2">
+              <div
+                id="symptomProgress"
+                class="text-xs text-gray-300 font-semibold"
+              ></div>
+              <button
+                onclick="closeSymptomAnalysis()"
+                class="text-xs text-red-400 hover:text-red-300"
+              >
+                Cancel
+              </button>
+            </div>
+            <div
+              id="symptomQuestion"
+              class="font-semibold text-gray-200 mb-2 text-sm"
+            ></div>
+            <div id="symptomOptions" class="space-y-1"></div>
+            <div class="mt-2 text-xs text-gray-400">
+              <i class="fas fa-info-circle mr-1"></i> Answer to help me
+              understand
+            </div>
+          </div>
+
+          <!-- Normal Chat Input -->
+          <div id="normalChat">
+            <div class="flex space-x-2 mb-2">
+              <input
+                type="text"
+                id="messageInput"
+                placeholder="Ask about eye health..."
+                class="flex-1 border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+                onkeypress="handleKeyPress(event)"
+              />
+              <button
+                onclick="sendMessage()"
+                id="sendButton"
+                class="bg-user-message text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+              >
+                <i class="fas fa-paper-plane text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Horizontal Scrollable Quick Action Buttons -->
+            <div class="horizontal-scroll">
+              <button
+                onclick="quickQuestion('my eyes are red and itchy')"
+                class="flex-shrink-0 bg-red-900 text-red-200 px-2 py-1 rounded text-xs hover:bg-red-800 transition-colors border border-red-800 whitespace-nowrap"
+              >
+                <i class="fas fa-eye mr-1"></i>Red & Itchy
+              </button>
+              <button
+                onclick="quickQuestion('symptoms of conjunctivitis')"
+                class="flex-shrink-0 bg-orange-900 text-orange-200 px-2 py-1 rounded text-xs hover:bg-orange-800 transition-colors border border-orange-800 whitespace-nowrap"
+              >
+                <i class="fas fa-info-circle mr-1"></i>Conjunctivitis
+              </button>
+              <button
+                onclick="quickQuestion('blurry vision')"
+                class="flex-shrink-0 bg-green-900 text-green-200 px-2 py-1 rounded text-xs hover:bg-green-800 transition-colors border border-green-800 whitespace-nowrap"
+              >
+                <i class="fas fa-search mr-1"></i>Blurry Vision
+              </button>
+              <button
+                onclick="quickQuestion('symptoms of cataract')"
+                class="flex-shrink-0 bg-blue-900 text-blue-200 px-2 py-1 rounded text-xs hover:bg-blue-800 transition-colors border border-blue-800 whitespace-nowrap"
+              >
+                <i class="fas fa-info-circle mr-1"></i>Cataract Info
+              </button>
+              <button
+                onclick="quickQuestion('dry eyes')"
+                class="flex-shrink-0 bg-purple-900 text-purple-200 px-2 py-1 rounded text-xs hover:bg-purple-800 transition-colors border border-purple-800 whitespace-nowrap"
+              >
+                <i class="fas fa-tint mr-1"></i>Dry Eyes
+              </button>
+              <button
+                onclick="quickQuestion('symptoms of glaucoma')"
+                class="flex-shrink-0 bg-teal-900 text-teal-200 px-2 py-1 rounded text-xs hover:bg-teal-800 transition-colors border border-teal-800 whitespace-nowrap"
+              >
+                <i class="fas fa-info-circle mr-1"></i>Glaucoma Info
+              </button>
+              <button
+                onclick="quickQuestion('floaters in vision')"
+                class="flex-shrink-0 bg-indigo-900 text-indigo-200 px-2 py-1 rounded text-xs hover:bg-indigo-800 transition-colors border border-indigo-800 whitespace-nowrap"
+              >
+                <i class="fas fa-eye mr-1"></i>Floaters
+              </button>
+              <button
+                onclick="quickQuestion('eye pain')"
+                class="flex-shrink-0 bg-pink-900 text-pink-200 px-2 py-1 rounded text-xs hover:bg-pink-800 transition-colors border border-pink-800 whitespace-nowrap"
+              >
+                <i class="fas fa-exclamation-triangle mr-1"></i>Eye Pain
+              </button>
+              <button
+                onclick="quickQuestion('light sensitivity')"
+                class="flex-shrink-0 bg-yellow-900 text-yellow-200 px-2 py-1 rounded text-xs hover:bg-yellow-800 transition-colors border border-yellow-800 whitespace-nowrap"
+              >
+                <i class="fas fa-sun mr-1"></i>Light Sensitivity
+              </button>
+              <button
+                onclick="quickQuestion('headache with vision')"
+                class="flex-shrink-0 bg-gray-700 text-gray-200 px-2 py-1 rounded text-xs hover:bg-gray-600 transition-colors border border-gray-600 whitespace-nowrap"
+              >
+                <i class="fas fa-head-side-vision mr-1"></i>Vision Headache
+              </button>
+              <button
+                onclick="quickQuestion('farsightedness')"
+                class="flex-shrink-0 bg-rose-900 text-rose-200 px-2 py-1 rounded text-xs hover:bg-rose-800 transition-colors border border-rose-800 whitespace-nowrap"
+              >
+                <i class="fas fa-ruler-horizontal mr-1"></i>Farsightedness
+              </button>
+              <button
+                onclick="quickQuestion('nearsightedness')"
+                class="flex-shrink-0 bg-amber-900 text-amber-200 px-2 py-1 rounded text-xs hover:bg-amber-800 transition-colors border border-amber-800 whitespace-nowrap"
+              >
+                <i class="fas fa-ruler-vertical mr-1"></i>Nearsightedness
+              </button>
+              <button
+                onclick="quickQuestion('astigmatism')"
+                class="flex-shrink-0 bg-lime-900 text-lime-200 px-2 py-1 rounded text-xs hover:bg-lime-800 transition-colors border border-lime-800 whitespace-nowrap"
+              >
+                <i class="fas fa-circle-notch mr-1"></i>Astigmatism
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // State variables
+      let symptomAnalysisMode = false;
+      let symptomQuestions = [];
+      let currentSymptomQuestionIndex = 0;
+      let symptomAnswers = {};
+      let initialSymptom = "";
+
+      // DOM Elements
+      const chatWidget = document.getElementById("chatWidget");
+      const messagesContainer = document.getElementById("messages");
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const symptomAnalysisSection = document.getElementById(
+        "symptomAnalysisSection"
+      );
+      const normalChat = document.getElementById("normalChat");
+      const symptomQuestion = document.getElementById("symptomQuestion");
+      const symptomOptions = document.getElementById("symptomOptions");
+      const symptomProgress = document.getElementById("symptomProgress");
+
+      // Initialize - focus on input
+      messageInput.focus();
+
+      // Handle Enter key press
+      function handleKeyPress(e) {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      }
+
+      // Minimize chat function (optional)
+      function minimizeChat() {
+        // You can implement minimize functionality here if needed
+        alert("Minimize functionality can be added here");
+      }
+
+      // Add message to chat
+      function addMessage(text, isUser = false) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `flex ${
+          isUser ? "justify-end" : "justify-start"
+        } fade-in`;
+
+        const bubbleDiv = document.createElement("div");
+        bubbleDiv.className = isUser ? "user-message" : "chatbot-message";
+
+        const textElement = document.createElement("div");
+        textElement.className = "message-text";
+        textElement.textContent = text;
+
+        bubbleDiv.appendChild(textElement);
+        messageDiv.appendChild(bubbleDiv);
+        messagesContainer.appendChild(messageDiv);
+
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // Quick question function
+      function quickQuestion(question) {
+        messageInput.value = question;
+        sendMessage();
+      }
+
+      // Send message function
+      function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // Add user message
+        addMessage(message, true);
+        messageInput.value = "";
+
+        // Disable send button while processing
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        // Check for "that's all" to end conversation
+        if (
+          message.toLowerCase().includes("that's all") ||
+          message.toLowerCase().includes("thats all")
+        ) {
+          setTimeout(() => {
+            if (symptomAnalysisMode && currentSymptomQuestionIndex >= 2) {
+              concludeSymptomAnalysis();
+            } else {
+              addMessage(
+                "I understand you have eye concerns. For proper diagnosis, I recommend consulting an eye care professional. Thank you for using VisionAI! 👁️💙",
+                false
+              );
+            }
+            resetSendButton();
+          }, 1000);
+          return;
+        }
+
+        // Check if this is a symptom report and start analysis
+        if (isSymptomMessage(message) && !symptomAnalysisMode) {
+          setTimeout(() => {
+            startSymptomAnalysis(message);
+            resetSendButton();
+          }, 1000);
+          return;
+        }
+
+        // Handle predefined responses
+        setTimeout(() => {
+          handlePredefinedResponse(message);
+        }, 1000);
+      }
+
+      // Reset send button
+      function resetSendButton() {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+
+      // Check if message is about symptoms
+      function isSymptomMessage(message) {
+        const symptoms = [
+          "red",
+          "itchy",
+          "blurry",
+          "pain",
+          "dry",
+          "floaters",
+          "sensitivity",
+          "headache",
+          "burning",
+          "watering",
+          "discharge",
+          "crust",
+          "swollen",
+          "puffy",
+          "irritation",
+          "sore",
+          "tired",
+          "straining",
+          "double vision",
+          "halos",
+          "flashing",
+          "light",
+          "dark",
+          "blind spot",
+          "loss of vision",
+          "veil",
+          "curtain",
+          "shadow",
+          "distortion",
+          "wavy",
+          "foggy",
+          "cloudy",
+          "glare",
+          "night blindness",
+          "hurt",
+          "ache",
+          "uncomfortable",
+          "discomfort",
+          "vision problem",
+        ];
+        const lowerMessage = message.toLowerCase();
+        return symptoms.some((symptom) => lowerMessage.includes(symptom));
+      }
+
+      // Handle predefined responses
+      function handlePredefinedResponse(message) {
+        const lowerMessage = message.toLowerCase();
+        let response = "";
+
+        // Condition responses
+        const conditions = {
+          conjunctivitis:
+            "👁️ Conjunctivitis (Pink Eye)\n\nCommon symptoms:\n• Redness in one or both eyes\n• Itchiness or irritation\n• Gritty feeling\n• Discharge that forms crust\n• Watery eyes\n• Sensitivity to light\n\nTreatment depends on the cause (viral, bacterial, or allergic).",
+
+          cataract:
+            "👁️ Cataract\n\nCommon symptoms:\n• Clouded or blurred vision\n• Difficulty with night vision\n• Sensitivity to light and glare\n• Seeing 'halos' around lights\n• Fading or yellowing of colors\n• Double vision\n\nCataracts develop slowly and may require surgical treatment when they affect daily activities.",
+
+          glaucoma:
+            "👁️ Glaucoma\n\nCommon symptoms:\n• Often no early symptoms\n• Gradual loss of peripheral vision\n• Tunnel vision in advanced stages\n• Eye pain, headache\n• Nausea and vomiting\n• Blurred vision\n• Halos around lights\n\nRegular eye exams are crucial for early detection.",
+
+          "dry eye":
+            "👁️ Dry Eye Syndrome\n\nCommon symptoms:\n• Stinging or burning sensation\n• Stringy mucus in or around eyes\n• Eye redness\n• Sensitivity to light\n• Feeling of something in the eye\n• Blurred vision\n• Watery eyes (reflex tearing)\n\nArtificial tears and lifestyle changes can help manage symptoms.",
+
+          floaters:
+            "👁️ Eye Floaters\n\nCommon symptoms:\n• Small specks, dots, or circles in vision\n• Lines or cobweb-like shapes\n• Spots that move with eye movement\n• Most noticeable against bright backgrounds\n\nMost floaters are harmless, but sudden increases should be evaluated.",
+
+          "macular degeneration":
+            "👁️ Macular Degeneration\n\nCommon symptoms:\n• Gradual loss of clear vision\n• Distorted vision (straight lines appear wavy)\n• Dark or empty area in center of vision\n• Difficulty reading or recognizing faces\n• Need for brighter light when reading\n\nRegular monitoring is important for management.",
+        };
+
+        // Check for condition matches
+        for (const [condition, conditionResponse] of Object.entries(
+          conditions
+        )) {
+          if (lowerMessage.includes(condition)) {
+            response = conditionResponse;
+            break;
+          }
+        }
+
+        // General responses
+        if (!response) {
+          if (
+            lowerMessage.includes("hello") ||
+            lowerMessage.includes("hi") ||
+            lowerMessage.includes("hey")
+          ) {
+            response =
+              "Hello! 👋 I'm your VisionAI assistant. How can I help with your eye health today?";
+          } else if (lowerMessage.includes("thank")) {
+            response =
+              "You're welcome! 😊 I'm here to help with any other eye health questions you might have.";
+          } else if (lowerMessage.includes("help")) {
+            response =
+              "I can help you with:\n• Eye symptom analysis\n• Information about eye conditions\n• General eye health advice\n• Understanding eye symptoms\n\nJust describe your symptoms or ask about specific conditions!";
+          } else {
+            response =
+              "I understand you're asking about eye health. For personalized medical advice, please consult an eye care professional. Is there a specific eye condition or symptom you'd like to know more about?";
+          }
+        }
+
+        addMessage(response, false);
+        resetSendButton();
+      }
+
+      // Symptom analysis functions
+      function startSymptomAnalysis(symptom) {
+        initialSymptom = symptom;
+        symptomAnalysisMode = true;
+        symptomAnswers = { initial: symptom };
+        currentSymptomQuestionIndex = 0;
+
+        symptomQuestions = [
+          {
+            question: "How long have you been experiencing this?",
+            options: [
+              "Less than a day",
+              "1-3 days",
+              "4-7 days",
+              "More than a week",
+            ],
+          },
+          {
+            question: "Is this affecting one or both eyes?",
+            options: [
+              "Only left eye",
+              "Only right eye",
+              "Both eyes",
+              "Not sure",
+            ],
+          },
+          {
+            question: "How severe would you rate this symptom?",
+            options: [
+              "Mild - barely noticeable",
+              "Moderate - bothersome",
+              "Severe - affecting vision",
+              "Very severe - urgent",
+            ],
+          },
+        ];
+
+        symptomAnalysisSection.classList.remove("hidden");
+        normalChat.classList.add("hidden");
+        displaySymptomQuestion();
+      }
+
+      function displaySymptomQuestion() {
+        if (currentSymptomQuestionIndex < symptomQuestions.length) {
+          const questionData = symptomQuestions[currentSymptomQuestionIndex];
+          symptomProgress.textContent = `Question ${
+            currentSymptomQuestionIndex + 1
+          } of ${symptomQuestions.length}`;
+          symptomQuestion.textContent = questionData.question;
+
+          symptomOptions.innerHTML = "";
+          questionData.options.forEach((option) => {
+            const button = document.createElement("button");
+            button.className =
+              "w-full text-left bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded px-3 py-2 text-xs transition-colors text-gray-200";
+            button.textContent = option;
+            button.onclick = (e) => {
+              e.stopPropagation(); // Prevent event from bubbling up
+              selectSymptomOption(option);
+            };
+            symptomOptions.appendChild(button);
+          });
+        } else {
+          concludeSymptomAnalysis();
+        }
+      }
+
+      function selectSymptomOption(selectedOption) {
+        symptomAnswers[`question_${currentSymptomQuestionIndex}`] =
+          selectedOption;
+        currentSymptomQuestionIndex++;
+        displaySymptomQuestion();
+      }
+
+      function concludeSymptomAnalysis() {
+        symptomAnalysisSection.classList.add("hidden");
+        normalChat.classList.remove("hidden");
+        symptomAnalysisMode = false;
+
+        const conclusion = generateSymptomConclusion();
+        addMessage(conclusion, false);
+      }
+
+      function generateSymptomConclusion() {
+        let conclusion = "Based on your symptoms:\n\n";
+
+        if (
+          initialSymptom.toLowerCase().includes("red") ||
+          initialSymptom.toLowerCase().includes("itchy")
+        ) {
+          conclusion += "• Possible conjunctivitis or allergic reaction\n";
+          conclusion += "• Avoid rubbing eyes, use cool compresses\n";
+          conclusion += "• Consider over-the-counter antihistamine eye drops\n";
+        }
+
+        if (
+          initialSymptom.toLowerCase().includes("blurry") ||
+          initialSymptom.toLowerCase().includes("vision")
+        ) {
+          conclusion +=
+            "• Could indicate refractive error or other vision issues\n";
+          conclusion += "• Rest eyes regularly, follow the 20-20-20 rule\n";
+          conclusion += "• Schedule an eye exam for proper diagnosis\n";
+        }
+
+        if (initialSymptom.toLowerCase().includes("pain")) {
+          conclusion += "• Eye pain should be evaluated promptly\n";
+          conclusion += "• Avoid self-medication without professional advice\n";
+          conclusion += "• Seek immediate care for severe or sudden pain\n";
+        }
+
+        if (initialSymptom.toLowerCase().includes("dry")) {
+          conclusion += "• Possible dry eye syndrome\n";
+          conclusion += "• Use artificial tears as needed\n";
+          conclusion += "• Take regular breaks during screen time\n";
+          conclusion += "• Use a humidifier in dry environments\n";
+        }
+
+        conclusion +=
+          "\nFor proper diagnosis and treatment, I recommend consulting an eye care professional. 👁️💙";
+
+        return conclusion;
+      }
+
+      function closeSymptomAnalysis() {
+        symptomAnalysisSection.classList.add("hidden");
+        normalChat.classList.remove("hidden");
+        symptomAnalysisMode = false;
+        addMessage(
+          "Symptom analysis cancelled. Feel free to ask any questions about eye care!",
+          false
+        );
+      }
+    </script>
+  </body>
+</html>

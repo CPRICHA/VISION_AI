@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eye Wellness Assessment</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* --- Dark clinical palette to match Vision AI UI --- */
+      :root {
+        --bg-main: #050b1a; /* page background */
+        --bg-card: #071326; /* card background */
+        --bg-card-alt: #0b1830; /* slightly lighter card */
+        --accent: #29a3ff; /* primary blue */
+        --accent-soft: #1f8ae0;
+        --accent-strong: #3db5ff; /* button-like blue */
+        --text-main: #e5edf9;
+        --text-muted: #7f8cb2;
+        --border-subtle: #1c2741;
+        --scroll-track: #050b1a;
+        --scroll-thumb: #1b2a47;
+        --scroll-thumb-hover: #2e4a7a;
+      }
+
+      body {
+        background: radial-gradient(circle at top left, #0f1d3a 0, transparent 55%),
+          radial-gradient(circle at bottom right, #1a3c72 0, transparent 55%),
+          var(--bg-main);
+        color: var(--text-main);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        background: linear-gradient(135deg, #081427, #020617);
+        color: var(--text-main);
+        text-align: center;
+        padding: 20px 16px;
+        box-shadow: 0 8px 24px rgba(3, 8, 23, 0.9);
+        border-bottom: 1px solid rgba(65, 105, 225, 0.35);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        opacity: 0.85;
+        max-width: 480px;
+        margin: 0 auto;
+        color: var(--text-muted);
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px;
+        flex: 1;
+        gap: 16px;
+      }
+
+      .half {
+        flex: 1;
+        min-width: 260px;
+      }
+
+      .card {
+        background: radial-gradient(circle at top left, #0f1d3a 0, #071326 45%),
+          radial-gradient(circle at bottom right, #050b1a 0, #071326 55%);
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-subtle);
+      }
+
+      .questionnaire-title {
+        color: var(--text-main);
+        margin-bottom: 14px;
+        font-size: 18px;
+        text-align: left;
+      }
+
+      .progress-container {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 999px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(51, 102, 204, 0.2);
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: linear-gradient(to right, var(--accent), var(--accent-strong));
+        border-radius: 999px;
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+
+      .question-container {
+        position: relative;
+        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        max-height: 480px;
+        overflow-y: auto;
+        padding-right: 6px;
+        margin-right: 2px;
+      }
+
+      /* Custom scrollbar styling */
+      .question-container::-webkit-scrollbar {
+        width: 7px;
+      }
+
+      .question-container::-webkit-scrollbar-track {
+        background: var(--scroll-track);
+        border-radius: 10px;
+      }
+
+      .question-container::-webkit-scrollbar-thumb {
+        background: var(--scroll-thumb);
+        border-radius: 10px;
+      }
+
+      .question-container::-webkit-scrollbar-thumb:hover {
+        background: var(--scroll-thumb-hover);
+      }
+
+      .question {
+        position: absolute;
+        width: 100%;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+        opacity: 1;
+        padding-bottom: 16px;
+      }
+
+      .question-number {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+
+      .question-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 18px;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-right: 4px;
+      }
+
+      .option {
+        padding: 12px;
+        border: 1px solid rgba(70, 97, 178, 0.6);
+        background: rgba(7, 19, 38, 0.9);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        color: var(--text-main);
+      }
+
+      .option:hover {
+        background: rgba(17, 35, 80, 0.95);
+        border-color: rgba(82, 164, 255, 0.9);
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.5);
+      }
+
+      .option.selected {
+        background: radial-gradient(circle at top left, #1f3b70 0, #102347 55%);
+        border-color: var(--accent-strong);
+      }
+
+      .option-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #607d8b;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(5, 11, 26, 0.7);
+      }
+
+      .option.selected .option-circle {
+        border-color: var(--accent-strong);
+        background: var(--accent-strong);
+      }
+
+      .option.selected .option-circle::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #ffffff;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid rgba(39, 56, 103, 0.8);
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-prev {
+        background-color: rgba(14, 23, 42, 0.9);
+        color: var(--text-main);
+        border: 1px solid rgba(65, 85, 148, 0.7);
+      }
+
+      .btn-prev:hover {
+        background-color: rgba(30, 64, 175, 0.65);
+      }
+
+      .btn-next {
+        background: linear-gradient(135deg, var(--accent-soft), var(--accent-strong));
+        color: #ffffff;
+        opacity: 0.4;
+        pointer-events: none;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.75);
+      }
+
+      .btn-next.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .btn-next:hover {
+        filter: brightness(1.05);
+      }
+
+      .btn-finish {
+        background: linear-gradient(135deg, #22c55e, #4ade80);
+        color: #ffffff;
+        opacity: 0.4;
+        pointer-events: none;
+        box-shadow: 0 8px 18px rgba(21, 128, 61, 0.7);
+      }
+
+      .btn-finish.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .btn-finish:hover {
+        filter: brightness(1.05);
+      }
+
+      .btn-exit {
+        background: linear-gradient(135deg, #fb923c, #f97316);
+        color: #ffffff;
+        margin-top: 16px;
+        box-shadow: 0 8px 20px rgba(248, 113, 22, 0.5);
+      }
+
+      .btn-exit:hover {
+        filter: brightness(1.05);
+      }
+
+      .results-title {
+        color: var(--text-main);
+        margin-bottom: 10px;
+        font-size: 18px;
+        text-align: left;
+      }
+
+      .score-display {
+        text-align: center;
+        margin-bottom: 18px;
+      }
+
+      .score-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        font-weight: bold;
+        color: #ffffff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(circle at top, #1f2937, #020617);
+      }
+
+      .score-circle::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: conic-gradient(
+          #22c55e 0% 80%,
+          #fbbf24 80% 95%,
+          #f97373 95% 100%
+        );
+        opacity: 0.9;
+        z-index: -1;
+      }
+
+      .score-circle-inner {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: #020617;
+        border: 2px solid rgba(148, 163, 184, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-main);
+        font-size: 32px;
+      }
+
+      .category {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        padding: 6px 16px;
+        border-radius: 999px;
+        display: inline-block;
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .excellent {
+        background-color: rgba(22, 163, 74, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.6);
+      }
+
+      .moderate {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #facc15;
+        border: 1px solid rgba(234, 179, 8, 0.7);
+      }
+
+      .low {
+        background-color: rgba(248, 180, 0, 0.12);
+        color: #fbbf24;
+        border: 1px solid rgba(234, 179, 8, 0.7);
+      }
+
+      .poor {
+        background-color: rgba(248, 113, 113, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, 0.8);
+      }
+
+      .suggestions {
+        margin-top: 8px;
+        text-align: left;
+        flex: 1;
+      }
+
+      .suggestions h3 {
+        color: var(--text-main);
+        margin-bottom: 8px;
+        text-align: left;
+        font-size: 16px;
+      }
+
+      .suggestions ul {
+        padding-left: 16px;
+      }
+
+      .suggestions li {
+        margin-bottom: 8px;
+        padding-left: 4px;
+        line-height: 1.5;
+        color: var(--text-muted);
+      }
+
+      .initial-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+        color: var(--text-muted);
+      }
+
+      .initial-state i {
+        font-size: 40px;
+        margin-bottom: 10px;
+        color: var(--accent-strong);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .slide-out-left {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+
+      .slide-in-right {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .half {
+          width: 100%;
+        }
+
+        .card {
+          padding: 16px;
+        }
+
+        .question-text {
+          font-size: 15px;
+        }
+
+        .score-circle {
+          width: 150px;
+          height: 150px;
+        }
+
+        .score-circle-inner {
+          width: 120px;
+          height: 120px;
+        }
+
+        .question-container {
+          max-height: 420px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Eye Wellness Assessment</h1>
+      <p class="subtitle">
+        Complete this short assessment to get personalized eye care recommendations
+      </p>
+    </header>
+
+    <div class="container">
+      <div class="half">
+        <div class="card">
+          <h2 class="questionnaire-title">Eye Wellness Questionnaire</h2>
+
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+
+          <div class="question-container">
+            <!-- Age Question -->
+            <div class="question" id="question-1">
+              <div class="question-number">
+                Before we begin, please tell me your age
+              </div>
+              <div class="question-text">How old are you?</div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Under 18</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">18–25</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">26–40</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">41–60</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Above 60</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <div></div>
+                <!-- Empty div for spacing -->
+                <button class="btn btn-next" id="next-1">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 1 -->
+            <div class="question hidden" id="question-2">
+              <div class="question-number">Question 1 of 10</div>
+              <div class="question-text">
+                How many hours do you spend on screens (mobile, laptop, TV) daily?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Less than 2 hours</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">2–4 hours</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">4–6 hours</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">6–8 hours</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">More than 8 hours</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-2">Previous</button>
+                <button class="btn btn-next" id="next-2">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question hidden" id="question-3">
+              <div class="question-number">Question 2 of 10</div>
+              <div class="question-text">
+                Do you take short breaks like the 20-20-20 rule while using screens?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Always</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Often</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Sometimes</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Rarely</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-3">Previous</button>
+                <button class="btn btn-next" id="next-3">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question hidden" id="question-4">
+              <div class="question-number">Question 3 of 10</div>
+              <div class="question-text">
+                How many hours of sleep do you get each night?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">8 or more hours</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">7–8 hours</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">6–7 hours</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">5–6 hours</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Less than 5 hours</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-4">Previous</button>
+                <button class="btn btn-next" id="next-4">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question hidden" id="question-5">
+              <div class="question-number">Question 4 of 10</div>
+              <div class="question-text">
+                Do you use your phone or laptop in dim lighting or right before sleeping?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Rarely</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Sometimes</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Often</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Always</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-5">Previous</button>
+                <button class="btn btn-next" id="next-5">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question hidden" id="question-6">
+              <div class="question-number">Question 5 of 10</div>
+              <div class="question-text">
+                How often do you include Vitamin A–rich foods (carrots, spinach, fish, eggs) in your diet?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Daily</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">3–4 times a week</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Once or twice a week</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Occasionally</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Hardly ever</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-6">Previous</button>
+                <button class="btn btn-next" id="next-6">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="question hidden" id="question-7">
+              <div class="question-number">Question 6 of 10</div>
+              <div class="question-text">How much water do you drink per day?</div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">More than 8 glasses</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">6–8 glasses</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">4–6 glasses</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">2–4 glasses</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Less than 2 glasses</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-7">Previous</button>
+                <button class="btn btn-next" id="next-7">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="question hidden" id="question-8">
+              <div class="question-number">Question 7 of 10</div>
+              <div class="question-text">
+                Do you experience eye strain, burning, or redness?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Rarely</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Sometimes</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Often</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Very frequently</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-8">Previous</button>
+                <button class="btn btn-next" id="next-8">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="question hidden" id="question-9">
+              <div class="question-number">Question 8 of 10</div>
+              <div class="question-text">
+                Do you get blurry vision after long screen use?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Rarely</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Sometimes</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Often</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Very frequently</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-9">Previous</button>
+                <button class="btn btn-next" id="next-9">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 9 -->
+            <div class="question hidden" id="question-10">
+              <div class="question-number">Question 9 of 10</div>
+              <div class="question-text">How often do you go for an eye check-up?</div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Every 6 months</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Once a year</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Every 2 years</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Occasionally</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-10">Previous</button>
+                <button class="btn btn-next" id="next-10">Next</button>
+              </div>
+            </div>
+
+            <!-- Question 10 -->
+            <div class="question hidden" id="question-11">
+              <div class="question-number">Question 10 of 10</div>
+              <div class="question-text">
+                Do you use blue-light filter or anti-glare glasses while using devices?
+              </div>
+              <div class="options">
+                <div class="option" data-value="0">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Always</div>
+                </div>
+                <div class="option" data-value="1">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Often</div>
+                </div>
+                <div class="option" data-value="2">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Sometimes</div>
+                </div>
+                <div class="option" data-value="3">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Rarely</div>
+                </div>
+                <div class="option" data-value="4">
+                  <div class="option-circle"></div>
+                  <div class="option-text">Never</div>
+                </div>
+              </div>
+              <div class="navigation">
+                <button class="btn btn-prev" id="prev-11">Previous</button>
+                <button class="btn btn-finish" id="finish">Finish</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="half">
+        <div class="card">
+          <h2 class="results-title">Your Eye Wellness Score</h2>
+          <div id="results-container">
+            <div class="initial-state">
+              <i>👁</i>
+              <h3>Complete the questionnaire to see your wellness score</h3>
+              <p>
+                Your results will appear here once you finish the assessment
+              </p>
+            </div>
+
+            <div class="score-display hidden" id="score-display">
+              <div class="score-circle">
+                <div class="score-circle-inner" id="score-value">0</div>
+              </div>
+              <div class="category" id="category">Excellent</div>
+            </div>
+
+            <div class="suggestions hidden" id="suggestions">
+              <h3>Suggestions for Improvement:</h3>
+              <ul id="suggestions-list"></ul>
+            </div>
+
+            <button class="btn btn-exit hidden" id="exit-btn">
+              Exit Assessment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const totalQuestions = 11; // Age question + 10 wellness questions
+        let currentQuestion = 1;
+        const answers = {};
+        const progressBar = document.getElementById("progress-bar");
+
+        updateProgressBar();
+
+        // Option selection
+        document.querySelectorAll(".option").forEach((option) => {
+          option.addEventListener("click", function () {
+            const questionId = this.closest(".question").id;
+            const questionNumber = parseInt(questionId.split("-")[1], 10);
+
+            this.parentElement.querySelectorAll(".option").forEach((opt) => {
+              opt.classList.remove("selected");
+            });
+
+            this.classList.add("selected");
+
+            answers[questionNumber] = parseInt(this.getAttribute("data-value"), 10);
+
+            const nextButton = document.getElementById(`next-${questionNumber}`);
+            if (nextButton) {
+              nextButton.classList.add("active");
+            }
+
+            const finishButton = document.getElementById("finish");
+            if (finishButton && questionNumber === totalQuestions) {
+              finishButton.classList.add("active");
+            }
+          });
+        });
+
+        // Navigation buttons
+        for (let i = 1; i <= totalQuestions; i++) {
+          const nextButton = document.getElementById(`next-${i}`);
+          if (nextButton) {
+            nextButton.addEventListener("click", function () {
+              navigateToQuestion(currentQuestion + 1);
+            });
+          }
+
+          const prevButton = document.getElementById(`prev-${i}`);
+          if (prevButton) {
+            prevButton.addEventListener("click", function () {
+              navigateToQuestion(currentQuestion - 1);
+            });
+          }
+        }
+
+        const finishBtn = document.getElementById("finish");
+        if (finishBtn) {
+          finishBtn.addEventListener("click", function () {
+            calculateScore();
+          });
+        }
+
+        const exitBtn = document.getElementById("exit-btn");
+        if (exitBtn) {
+          exitBtn.addEventListener("click", function () {
+            restartAssessment();
+          });
+        }
+
+        function navigateToQuestion(questionNumber) {
+          if (questionNumber < 1 || questionNumber > totalQuestions) return;
+
+          const currentQuestionElement = document.getElementById(
+            `question-${currentQuestion}`
+          );
+          const nextQuestionElement = document.getElementById(
+            `question-${questionNumber}`
+          );
+
+          if (!currentQuestionElement || !nextQuestionElement) return;
+
+          currentQuestionElement.classList.add("slide-out-left");
+
+          setTimeout(() => {
+            currentQuestionElement.classList.add("hidden");
+            currentQuestionElement.classList.remove("slide-out-left");
+
+            nextQuestionElement.classList.remove("hidden");
+            nextQuestionElement.classList.add("slide-in-right");
+
+            setTimeout(() => {
+              nextQuestionElement.classList.remove("slide-in-right");
+            }, 50);
+          }, 500);
+
+          currentQuestion = questionNumber;
+          updateProgressBar();
+        }
+
+        function updateProgressBar() {
+          const progress = ((currentQuestion - 1) / totalQuestions) * 100;
+          progressBar.style.width = `${progress}%`;
+        }
+
+        function calculateScore() {
+          let penalty = 0;
+
+          penalty += (answers[1] || 0) * 2; // Age
+          penalty += (answers[2] || 0) * 3; // Screen time
+          penalty += (answers[3] || 0) * 2; // Breaks
+          penalty += (answers[4] || 0) * 3; // Sleep
+          penalty += (answers[5] || 0) * 2; // Dim lighting
+          penalty += (answers[6] || 0) * 2; // Vitamin A
+          penalty += (answers[7] || 0) * 2; // Water
+          penalty += (answers[8] || 0) * 2; // Eye strain
+          penalty += (answers[9] || 0) * 2; // Blurry vision
+          penalty += (answers[10] || 0) * 2; // Check-ups
+          penalty += (answers[11] || 0) * 2; // Blue light filter
+
+          let score = 100 - penalty;
+          if (score < 0) score = 0;
+
+          let category;
+          let categoryClass;
+          let suggestions;
+
+          if (score >= 80) {
+            category = "Excellent";
+            categoryClass = "excellent";
+            suggestions = [
+              "Your eye health habits are excellent! Keep up the good work.",
+              "Continue with regular eye check-ups to maintain your eye health.",
+              "Maintain your balanced diet rich in Vitamin A.",
+              "Keep following the 20-20-20 rule during screen time.",
+            ];
+          } else if (score >= 60) {
+            category = "Moderate";
+            categoryClass = "moderate";
+            suggestions = [
+              "Try to reduce your screen time by taking more frequent breaks.",
+              "Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.",
+              "Ensure you're getting 7-8 hours of quality sleep each night.",
+              "Increase your intake of Vitamin A-rich foods like carrots, spinach, and eggs.",
+              "Consider using blue-light filters on your devices, especially in the evening.",
+            ];
+          } else if (score >= 40) {
+            category = "Low";
+            categoryClass = "low";
+            suggestions = [
+              "Reduce your daily screen time significantly and take regular breaks.",
+              "Implement the 20-20-20 rule consistently during all screen use.",
+              "Aim for 7-8 hours of quality sleep each night for eye recovery.",
+              "Avoid using screens in dim lighting or right before bedtime.",
+              "Increase your water intake to at least 8 glasses per day.",
+              "Include more Vitamin A-rich foods in your diet daily.",
+              "Consider using blue-light filtering glasses for all screen use.",
+            ];
+          } else {
+            category = "Poor";
+            categoryClass = "poor";
+            suggestions = [
+              "Reduce your daily screen time significantly and take regular breaks.",
+              "Implement the 20-20-20 rule consistently during all screen use.",
+              "Aim for 7-8 hours of quality sleep each night for eye recovery.",
+              "Avoid using screens in dim lighting or right before bedtime.",
+              "Increase your water intake to at least 8 glasses per day.",
+              "Include more Vitamin A-rich foods in your diet daily.",
+              "Schedule an eye examination with a specialist as soon as possible.",
+              "Consider using blue-light filtering glasses for all screen use.",
+            ];
+          }
+
+          showResults(score, category, categoryClass, suggestions);
+        }
+
+        function showResults(score, category, categoryClass, suggestions) {
+          const initialState = document.querySelector(".initial-state");
+          const scoreDisplay = document.getElementById("score-display");
+          const scoreValue = document.getElementById("score-value");
+          const categoryElement = document.getElementById("category");
+          const suggestionsElement = document.getElementById("suggestions");
+          const suggestionsList = document.getElementById("suggestions-list");
+          const exitButton = document.getElementById("exit-btn");
+
+          if (!scoreDisplay || !scoreValue || !categoryElement) return;
+
+          scoreValue.textContent = score;
+          categoryElement.textContent = category;
+          categoryElement.className = `category ${categoryClass}`;
+
+          suggestionsList.innerHTML = "";
+          suggestions.forEach((suggestion) => {
+            const li = document.createElement("li");
+            li.textContent = suggestion;
+            suggestionsList.appendChild(li);
+          });
+
+          initialState.classList.add("hidden");
+          scoreDisplay.classList.remove("hidden");
+          suggestionsElement.classList.remove("hidden");
+          exitButton.classList.remove("hidden");
+
+          progressBar.style.width = "100%";
+        }
+
+        function restartAssessment() {
+          currentQuestion = 1;
+          Object.keys(answers).forEach((key) => delete answers[key]);
+
+          document.querySelectorAll(".option").forEach((option) => {
+            option.classList.remove("selected");
+          });
+
+          document.querySelectorAll(".btn-next, .btn-finish").forEach((btn) => {
+            btn.classList.remove("active");
+          });
+
+          document.querySelector(".initial-state").classList.remove("hidden");
+          document.getElementById("score-display").classList.add("hidden");
+          document.getElementById("suggestions").classList.add("hidden");
+          document.getElementById("exit-btn").classList.add("hidden");
+
+          document.querySelectorAll(".question").forEach((container, index) => {
+            if (index === 0) {
+              container.classList.remove("hidden");
+              container.classList.remove("slide-out-left");
+              container.classList.remove("slide-in-right");
+            } else {
+              container.classList.add("hidden");
+            }
+          });
+
+          updateProgressBar();
+        }
+      });
+    </script>
+  </body>
+</html>
